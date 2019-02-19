@@ -9,24 +9,45 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using LocalTheatreAssessmentLB.Models;
+using System.Configuration;
+using Microsoft.AspNet.Identity.EntityFramework;
 
 namespace LocalTheatreAssessmentLB.Controllers
 {
+    /// <summary>   A controller for handling accounts. </summary>
+    ///
+    /// <remarks>   Lukas, 30.01.2019. </remarks>
+
     [Authorize]
     public class AccountController : Controller
     {
+
+        /// <summary>   Manager for sign in. </summary>
         private ApplicationSignInManager _signInManager;
+
+        /// <summary>   Manager for user. </summary>
         private ApplicationUserManager _userManager;
 
         public AccountController()
         {
         }
 
-        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager )
+        /// <summary>   Constructor. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="userManager">      Manager for user. </param>
+        /// <param name="signInManager">    Manager for sign in. </param>
+
+        public AccountController(ApplicationUserManager userManager, ApplicationSignInManager signInManager)
         {
             UserManager = userManager;
             SignInManager = signInManager;
         }
+
+        /// <summary>   Gets or sets the manager for sign in. </summary>
+        ///
+        /// <value> The sign in manager. </value>
 
         public ApplicationSignInManager SignInManager
         {
@@ -34,11 +55,15 @@ namespace LocalTheatreAssessmentLB.Controllers
             {
                 return _signInManager ?? HttpContext.GetOwinContext().Get<ApplicationSignInManager>();
             }
-            private set 
-            { 
-                _signInManager = value; 
+            private set
+            {
+                _signInManager = value;
             }
         }
+
+        /// <summary>   Gets or sets the manager for user. </summary>
+        ///
+        /// <value> The user manager. </value>
 
         public ApplicationUserManager UserManager
         {
@@ -54,15 +79,35 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // GET: /Account/Login
+
+        /// <summary>   Login. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="returnUrl">    URL of the return. </param>
+        ///
+        /// <returns>   A response stream to send to the Login View. </returns>
+
         [AllowAnonymous]
         public ActionResult Login(string returnUrl)
         {
+            CreateAdminIfNeeded();
             ViewBag.ReturnUrl = returnUrl;
             return View();
         }
 
         //
         // POST: /Account/Login
+
+        /// <summary>   Login. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="model">        The model. </param>
+        /// <param name="returnUrl">    URL of the return. </param>
+        ///
+        /// <returns>   A response stream to send to the Login View. </returns>
+
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -93,6 +138,17 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // GET: /Account/VerifyCode
+
+        /// <summary>   Verify code. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="provider">     The provider. </param>
+        /// <param name="returnUrl">    URL of the return. </param>
+        /// <param name="rememberMe">   True to remember me. </param>
+        ///
+        /// <returns>   An asynchronous result that yields an ActionResult. </returns>
+
         [AllowAnonymous]
         public async Task<ActionResult> VerifyCode(string provider, string returnUrl, bool rememberMe)
         {
@@ -106,6 +162,15 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // POST: /Account/VerifyCode
+
+        /// <summary>   Verify code. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="model">    The model. </param>
+        ///
+        /// <returns>   An asynchronous result that yields an ActionResult. </returns>
+
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -120,7 +185,7 @@ namespace LocalTheatreAssessmentLB.Controllers
             // If a user enters incorrect codes for a specified amount of time then the user account 
             // will be locked out for a specified amount of time. 
             // You can configure the account lockout settings in IdentityConfig
-            var result = await SignInManager.TwoFactorSignInAsync(model.Provider, model.Code, isPersistent:  model.RememberMe, rememberBrowser: model.RememberBrowser);
+            var result = await SignInManager.TwoFactorSignInAsync(model.Provider, model.Code, isPersistent: model.RememberMe, rememberBrowser: model.RememberBrowser);
             switch (result)
             {
                 case SignInStatus.Success:
@@ -136,6 +201,13 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // GET: /Account/Register
+
+        /// <summary>   Registers this object. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <returns>   A response stream to send to the Register View. </returns>
+
         [AllowAnonymous]
         public ActionResult Register()
         {
@@ -144,6 +216,15 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // POST: /Account/Register
+
+        /// <summary>   Registers this object. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="model">    The model. </param>
+        ///
+        /// <returns>   A response stream to send to the Register View. </returns>
+
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -155,8 +236,8 @@ namespace LocalTheatreAssessmentLB.Controllers
                 var result = await UserManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    await SignInManager.SignInAsync(user, isPersistent:false, rememberBrowser:false);
-                    
+                    await SignInManager.SignInAsync(user, isPersistent: false, rememberBrowser: false);
+
                     // For more information on how to enable account confirmation and password reset please visit https://go.microsoft.com/fwlink/?LinkID=320771
                     // Send an email with this link
                     // string code = await UserManager.GenerateEmailConfirmationTokenAsync(user.Id);
@@ -174,6 +255,16 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // GET: /Account/ConfirmEmail
+
+        /// <summary>   Confirm email. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="userId">   Identifier for the user. </param>
+        /// <param name="code">     The code. </param>
+        ///
+        /// <returns>   An asynchronous result that yields an ActionResult. </returns>
+
         [AllowAnonymous]
         public async Task<ActionResult> ConfirmEmail(string userId, string code)
         {
@@ -187,6 +278,13 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // GET: /Account/ForgotPassword
+
+        /// <summary>   Forgot password. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <returns>   A response stream to send to the ForgotPassword View. </returns>
+
         [AllowAnonymous]
         public ActionResult ForgotPassword()
         {
@@ -223,6 +321,13 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // GET: /Account/ForgotPasswordConfirmation
+
+        /// <summary>   Forgot password confirmation. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <returns>   A response stream to send to the ForgotPasswordConfirmation View. </returns>
+
         [AllowAnonymous]
         public ActionResult ForgotPasswordConfirmation()
         {
@@ -239,6 +344,17 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // POST: /Account/ResetPassword
+
+        /// <summary>
+        /// (An Action that handles HTTP POST requests) resets the password described by model.
+        /// </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="model">    The model. </param>
+        ///
+        /// <returns>   An asynchronous result that yields an ActionResult. </returns>
+
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -265,6 +381,13 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // GET: /Account/ResetPasswordConfirmation
+
+        /// <summary>   Resets the password confirmation. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <returns>   A response stream to send to the ResetPasswordConfirmation View. </returns>
+
         [AllowAnonymous]
         public ActionResult ResetPasswordConfirmation()
         {
@@ -273,6 +396,16 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // POST: /Account/ExternalLogin
+
+        /// <summary>   (An Action that handles HTTP POST requests) external login. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="provider">     The provider. </param>
+        /// <param name="returnUrl">    URL of the return. </param>
+        ///
+        /// <returns>   A response stream to send to the ExternalLogin View. </returns>
+
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -284,6 +417,16 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // GET: /Account/SendCode
+
+        /// <summary>   Sends a code. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="returnUrl">    URL of the return. </param>
+        /// <param name="rememberMe">   True to remember me. </param>
+        ///
+        /// <returns>   An asynchronous result that yields an ActionResult. </returns>
+
         [AllowAnonymous]
         public async Task<ActionResult> SendCode(string returnUrl, bool rememberMe)
         {
@@ -299,6 +442,15 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // POST: /Account/SendCode
+
+        /// <summary>   Sends a code. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="model">    The model. </param>
+        ///
+        /// <returns>   An asynchronous result that yields an ActionResult. </returns>
+
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -319,6 +471,15 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // GET: /Account/ExternalLoginCallback
+
+        /// <summary>   Callback, called when the external login. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="returnUrl">    URL of the return. </param>
+        ///
+        /// <returns>   An asynchronous result that yields an ActionResult. </returns>
+
         [AllowAnonymous]
         public async Task<ActionResult> ExternalLoginCallback(string returnUrl)
         {
@@ -349,6 +510,18 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // POST: /Account/ExternalLoginConfirmation
+
+        /// <summary>
+        /// (An Action that handles HTTP POST requests) external login confirmation.
+        /// </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="model">        The model. </param>
+        /// <param name="returnUrl">    URL of the return. </param>
+        ///
+        /// <returns>   An asynchronous result that yields an ActionResult. </returns>
+
         [HttpPost]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
@@ -387,6 +560,13 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // POST: /Account/LogOff
+
+        /// <summary>   (An Action that handles HTTP POST requests) log off. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <returns>   A response stream to send to the LogOff View. </returns>
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult LogOff()
@@ -397,6 +577,13 @@ namespace LocalTheatreAssessmentLB.Controllers
 
         //
         // GET: /Account/ExternalLoginFailure
+
+        /// <summary>   External login failure. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <returns>   A response stream to send to the ExternalLoginFailure View. </returns>
+
         [AllowAnonymous]
         public ActionResult ExternalLoginFailure()
         {
@@ -424,7 +611,9 @@ namespace LocalTheatreAssessmentLB.Controllers
         }
 
         #region Helpers
+
         // Used for XSRF protection when adding external logins
+        /// <summary>   The xsrf key. </summary>
         private const string XsrfKey = "XsrfId";
 
         private IAuthenticationManager AuthenticationManager
@@ -435,6 +624,12 @@ namespace LocalTheatreAssessmentLB.Controllers
             }
         }
 
+        /// <summary>   Adds the errors. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="result">   The result. </param>
+
         private void AddErrors(IdentityResult result)
         {
             foreach (var error in result.Errors)
@@ -442,6 +637,14 @@ namespace LocalTheatreAssessmentLB.Controllers
                 ModelState.AddModelError("", error);
             }
         }
+
+        /// <summary>   Redirect to local. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+        ///
+        /// <param name="returnUrl">    URL of the return. </param>
+        ///
+        /// <returns>   A response stream to send to the RedirectToLocal View. </returns>
 
         private ActionResult RedirectToLocal(string returnUrl)
         {
@@ -478,6 +681,56 @@ namespace LocalTheatreAssessmentLB.Controllers
                     properties.Dictionary[XsrfKey] = UserId;
                 }
                 context.HttpContext.GetOwinContext().Authentication.Challenge(properties, LoginProvider);
+            }
+        }
+        #endregion
+
+        #region public ApplicationRoleManager RoleManager
+
+        /// <summary>   Manager for role. </summary>
+        private ApplicationRoleManager _roleManager;
+        public ApplicationRoleManager RoleManager
+        {
+            get
+            {
+                return _roleManager ?? HttpContext.GetOwinContext().GetUserManager<ApplicationRoleManager>();
+            }
+            private set
+            {
+                _roleManager = value;
+            }
+        }
+        #endregion
+        //Add CreateAdminIfNeeded
+        #region private void CreateAdminIfNeeded()
+
+        /// <summary>   Creates admin if needed. </summary>
+        ///
+        /// <remarks>   Lukas, 30.01.2019. </remarks>
+
+        private void CreateAdminIfNeeded()
+        {
+            //get Admin Account
+            string AdminUserName = ConfigurationManager.AppSettings["AdminUserName"];
+            string AdminPassword = ConfigurationManager.AppSettings["AdminPassword"];
+            //string AdminUserName = "Admin@Admin.com";
+            //string AdminPassword = "Password#1";
+            //see If Admin exists
+            var objAdminUser = UserManager.FindByEmail(AdminUserName);
+            if (objAdminUser == null)
+            {
+                //ssee if admin role exists
+                if (!RoleManager.RoleExists("Administrator"))
+                {
+                    //create the admin role(if needed)
+                    IdentityRole objAdminRole = new IdentityRole("Administrator");
+                    RoleManager.Create(objAdminRole);
+                }
+                //create Admin user
+                var objNewAdminUser = new ApplicationUser { UserName = AdminUserName, Email = AdminUserName };
+                var AdminUserCreateResult = UserManager.Create(objNewAdminUser, AdminPassword);
+                //put user in Admin role
+                UserManager.AddToRole(objNewAdminUser.Id, "Administrator");
             }
         }
         #endregion

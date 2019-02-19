@@ -29,5 +29,13 @@ namespace LocalTheatreAssessmentLB.Models
         {
             return new ApplicationDbContext();
         }
+
+        public System.Data.Entity.DbSet<LocalTheatreAssessmentLB.Models.Category> Categories { get; set; }
+
+        public System.Data.Entity.DbSet<LocalTheatreAssessmentLB.Models.Comment> Comments { get; set; }
+
+        public System.Data.Entity.DbSet<LocalTheatreAssessmentLB.Models.User> ApplicationUsers { get; set; }
+
+        public System.Data.Entity.DbSet<LocalTheatreAssessmentLB.Models.Post> Posts { get; set; }
     }
 }
